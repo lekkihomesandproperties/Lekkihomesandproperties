@@ -1,0 +1,1 @@
+const mongoose=require('mongoose');module.exports=mongoose.model('Comment',new mongoose.Schema({property:{type:mongoose.Schema.Types.ObjectId,ref:'Property',required:true,index:true},name:{type:String,required:true,trim:true,maxlength:80},text:{type:String,required:true,trim:true,maxlength:1000}},{timestamps:true}));

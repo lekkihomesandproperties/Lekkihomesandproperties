@@ -1,0 +1,53 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#06452e"><title>Admin Dashboard | LEKKIHOMESANDPROPERTIES</title><meta name="description" content="Discover land, homes, leasing and property management with LEKKIHOMESANDPROPERTIES."><link rel="stylesheet" href="styles.css"></head><body><header class="site-header"><div class="container nav-wrap"><a class="brand" href="index.html" aria-label="LEKKIHOMESANDPROPERTIES home"><img src="assets/logo.png" alt="LEKKIHOMESANDPROPERTIES logo"></a><button class="menu-toggle" aria-label="Open navigation">☰ Menu</button><nav class="nav-links"><a href="index.html">Home</a><a href="about-us.html">About Us</a><a href="property-listings.html">Properties</a><a href="contact-us.html">Contact Us</a><a href="gallery.html">Gallery</a><a href="projects.html">Projects</a></nav></div></header><main><section class="page-hero"><div class="container"><span class="eyebrow" style="color:#9b7616">Management portal</span><h1>Admin dashboard</h1><p>Sign in to manage website property listings. Keep your admin credentials private.</p></div></section><section class="section"><div class="container"><div id="loginPanel" class="form-panel" style="max-width:520px;margin:auto"><h2 style="color:var(--green)">Administrator login</h2><div id="adminMessage" class="notice" role="status">Use the admin email and password configured in your .env file.</div><form id="loginForm">
+    
+    
+    
+    <div class="field"><label>Email</label><input name="email" type="email" required></div><div class="field"><label>Password</label><input name="password" type="password" required></div><button class="btn btn-primary">Sign in</button></form></div><div id="dashboardPanel" class="hidden"><div class="admin-layout"><aside class="admin-sidebar"><strong>LEKKIHOMES Admin</strong><a href="#propertyEditor">＋ Add property</a><a href="property-listings.html">View public website</a><a href="#" onclick="adminLogout()">Log out</a></aside><div class="admin-panel"><h2 style="color:var(--green);margin-top:0">Property manager</h2><form id="propertyForm"><input type="hidden" name="id"><div class="field"><label>Property title</label><input name="title" required maxlength="160"></div><div class="field"><label>Location</label><input name="location" required maxlength="200"></div><div class="field"><label>Price (NGN)</label><input name="price" type="number" min="0" required></div><div class="field"><label>Listing type</label><select name="type"><option>For Sale</option><option>For Lease</option></select></div><div class="field"><label>Category</label><select name="category"><option>Land</option><option>House</option><option>Apartment</option><option>Commercial</option></select></div><div class="field"><label>Bedrooms</label><input name="beds" type="number" min="0" value="0"></div><div class="field"><label>Bathrooms</label><input name="baths" type="number" min="0" value="0"></div><div class="field"><label>Area / size</label><input name="area" placeholder="e.g. 500 sqm"></div>
+        
+        
+        
+
+
+        
+       <!-- Optional image URL for an existing image online -->
+<div class="field">
+  <label>Image URL (optional)</label>
+  <input
+    name="image"
+    id="propertyImageUrl"
+    type="url"
+    placeholder="https://..."
+  >
+  <small>Use this if your property image is already hosted online.</small>
+</div>
+
+<!-- Multiple property image uploads -->
+<div class="field">
+  <label for="imageFiles">Upload Property Pictures</label>
+
+  <input
+    name="imageFiles"
+    id="imageFiles"
+    type="file"
+    accept="image/*"
+    multiple
+  >
+
+  <small>
+    Select 8 or more pictures if available. You can select multiple
+    images at once. Supported image formats depend on your upload service.
+  </small>
+</div>
+
+<!-- Preview selected pictures -->
+<div id="imagePreview" class="image-preview-grid"></div>
+
+<!-- Existing image information when editing a property -->
+<div id="existingImages" class="image-preview-grid"></div>
+
+
+
+        
+        
+        
+        <div class="field"><label>Description</label><textarea name="description" maxlength="4000"></textarea></div><button class="btn btn-primary">Save property</button> <button type="button" class="btn btn-green" onclick="resetPropertyForm()">Clear</button></form><hr style="margin:30px 0;border:0;border-top:1px solid var(--line)"><h3>Current listings</h3><div id="adminListings">Sign in to load listings.</div></div></div></div></div></section></main><script src="admin.js"></script><footer class="site-footer"><div class="container"><div class="footer-grid"><div class="footer-brand"><img src="assets/logo.png" alt="LEKKIHOMESANDPROPERTIES"><p>Delivering Value, Building Wealth. Your trusted partner for property sales, leasing and management.</p></div><div><h4>Explore</h4><a href="about-us.html">About Us</a><a href="property-listings.html">Property Listings</a><a href="projects.html">Our Projects</a><a href="gallery.html">Gallery</a></div><div><h4>Our Services</h4><a href="property-listings.html">Land Sales</a><a href="property-listings.html">House Sales</a><a href="property-listings.html">Property Management</a><a href="property-listings.html">Lease & Rentals</a></div><div><h4>Get in touch</h4><a href="contact-us.html">Contact our team</a><a href="https://wa.me/2340000000000">WhatsApp (update number)</a><a href="mailto:hello@lekkihomesandproperties.com">hello@lekkihomesandproperties.com</a><p>Serving Lekki, Ajah, Sangotedo and wider Lagos.</p></div></div><div class="footer-bottom">© <span class="year"></span> LEKKIHOMESANDPROPERTIES. All rights reserved. Property information should be independently verified.</div></div></footer><script>document.querySelectorAll('.year').forEach(e=>e.textContent=new Date().getFullYear())</script><script src="app.js"></script></body></html>

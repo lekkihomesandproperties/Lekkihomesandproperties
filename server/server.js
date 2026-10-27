@@ -10,6 +10,8 @@ const path=require('path');
 const Property = require('./models/Property');
 const cors=require('cors');const rateLimit=require('express-rate-limit');
 const app=express(); app.set('trust proxy',1);app.use(cors());app.use(express.json({limit:'1mb'}));app.use(express.urlencoded({extended:true}));app.use('/api/',rateLimit({windowMs:15*60*1000,max:300,standardHeaders:true,legacyHeaders:false}));app.use(express.static(path.join(__dirname,'../public')));app.get('/health',(req,res)=>res.json({ok:true,service:'LEKKIHOMESANDPROPERTIES API'}));
+
+
 // Shareable property page for WhatsApp image previews
 app.get('/share/property/:id', async (req, res) => {
   try {
@@ -97,8 +99,11 @@ app.get('/share/property/:id', async (req, res) => {
   <meta name="twitter:description" content="${escapedDescription}">
   <meta name="twitter:image" content="${escapedImage}">
 
-  <meta http-equiv="refresh"
-        content="3;url=/property-listings.html?property=${encodeURIComponent(String(property._id))}">
+ <meta http-equiv="refresh"
+      content="3;url=https://https://lekkihomesandproperties-frontend.onrender.com/property-listings.html?property=${encodeURIComponent(String(property._id))}">
+
+
+
 </head>
 
 <body>
@@ -123,7 +128,11 @@ app.get('/share/property/:id', async (req, res) => {
     console.error('Property sharing page error:', error);
     res.status(500).send('Could not load property sharing page.');
   }
-});app.use('/api/auth',require('./routes/auth'));app.use('/api/properties',require('./routes/properties'));app.use('/api/contact',require('./routes/contact'));
+});app.use('/api/auth',require('./routes/auth'));app.use('/api/properties',require('./routes/properties'));
+
+app.use('/api/contact',require('./routes/contact'));
+
+
 app.use('/api/payments',require('./routes/payments'));app.use('/api/uploads',require('./routes/uploads'));
 app.get('*',(req,res)=>res.sendFile(path.join(__dirname,'../public/index.html')));
 

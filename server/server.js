@@ -99,8 +99,8 @@ app.get('/share/property/:id', async (req, res) => {
   <meta name="twitter:description" content="${escapedDescription}">
   <meta name="twitter:image" content="${escapedImage}">
 
- <meta http-equiv="refresh"
-      content="3;url=https://https://lekkihomesandproperties-frontend.onrender.com/property-listings.html?property=${encodeURIComponent(String(property._id))}">
+<meta http-equiv="refresh"
+      content="3;url=/property-listings.html?property=${encodeURIComponent(String(property._id))}">
 
 
 

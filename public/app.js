@@ -356,10 +356,15 @@ async function contactProperty(id) {
   // Use country code and digits only, without + or spaces.
   const whatsappNumber = '2347084502673';
 
-  const propertyURL = new URL(
-    `/share/property/${encodeURIComponent(String(property._id))}`,
-    window.location.origin
-  ).href;
+//   const propertyURL = new URL(
+//     `/share/property/${encodeURIComponent(String(property._id))}`,
+//     window.location.origin
+//   ).href;
+
+
+const propertyURL =
+  `${API.replace(/\/api\/?$/, '')}/share/property/` +
+  encodeURIComponent(String(property._id));
 
   const message = [
     'Hello LekkiHomesAndProperties!',

@@ -362,9 +362,16 @@ async function contactProperty(id) {
 //   ).href;
 
 
+// const propertyURL =
+//   `${API.replace(/\/api\/?$/, '')}/share/property/` +
+//   encodeURIComponent(String(property._id));
+
+
+
 const propertyURL =
-  `${API.replace(/\/api\/?$/, '')}/share/property/` +
+  `https://lekkihomesandproperties.onrender.com/share/property/` +
   encodeURIComponent(String(property._id));
+
 
   const message = [
     'Hello LekkiHomesAndProperties!',

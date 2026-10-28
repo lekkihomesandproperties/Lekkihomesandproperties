@@ -110,11 +110,16 @@ async function openProperty(id) {
             <div class="gallery-main">
 
                 <img
-                    id="galleryMainImage"
-                    class="modal-image"
-                    src="${esc(images[0])}"
-                    alt="${esc(p.title)}"
-                >
+    id="galleryMainImage"
+    class="modal-image clickable-property-image"
+    src="${esc(images[0])}"
+    alt="${esc(p.title)}"
+    onclick="openLightbox(currentGalleryIndex)"
+    title="Click to view full-size image"
+    role="button"
+    tabindex="0"
+    onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openLightbox(currentGalleryIndex)}"
+>
 
                 <button
                     type="button"
@@ -157,7 +162,7 @@ async function openProperty(id) {
                     <button
                         type="button"
                         class="gallery-thumb ${index === 0 ? 'active' : ''}"
-                        onclick="selectGalleryImage(${index})"
+                        onclick="openLightbox(${index})"
                         aria-label="View image ${index + 1}"
                     >
                         <img
@@ -325,6 +330,143 @@ function updateGalleryDisplay() {
     });
 }
 
+
+
+
+// Create the full-screen image viewer.
+function createImageLightbox() {
+    if (document.getElementById('imageLightbox')) return;
+
+    const lightbox = document.createElement('div');
+    lightbox.id = 'imageLightbox';
+    lightbox.className = 'image-lightbox';
+
+    lightbox.innerHTML = `
+        <button type="button"
+                class="lightbox-close"
+                aria-label="Close full-screen image"
+                onclick="closeImageLightbox()">
+            &times;
+        </button>
+
+        <button type="button"
+                class="lightbox-arrow lightbox-prev"
+                aria-label="Previous image"
+                onclick="changeLightboxImage(-1)">
+            &#10094;
+        </button>
+
+        <img id="lightboxImage" src="" alt="Full-size property image">
+
+        <button type="button"
+                class="lightbox-arrow lightbox-next"
+                aria-label="Next image"
+                onclick="changeLightboxImage(1)">
+            &#10095;
+        </button>
+
+        <div id="lightboxCounter" class="lightbox-counter"></div>
+    `;
+
+    lightbox.addEventListener('click', function(event) {
+        if (event.target === lightbox) {
+            closeImageLightbox();
+        }
+    });
+
+    document.body.appendChild(lightbox);
+}
+
+
+// Open the selected property picture in full-screen mode.
+function openLightbox(index = currentGalleryIndex) {
+    if (!currentGalleryImages.length) return;
+
+    currentGalleryIndex =
+        (index + currentGalleryImages.length) %
+        currentGalleryImages.length;
+
+    createImageLightbox();
+    updateGalleryDisplay();
+
+    const lightbox = document.getElementById('imageLightbox');
+
+    lightbox.classList.add('open');
+    document.body.style.overflow = 'hidden';
+
+    updateLightboxImage();
+}
+
+
+// Display the selected full-size image.
+function updateLightboxImage() {
+    const image = document.getElementById('lightboxImage');
+    const counter = document.getElementById('lightboxCounter');
+
+    if (!image || !currentGalleryImages.length) return;
+
+    image.src = currentGalleryImages[currentGalleryIndex];
+
+    counter.textContent =
+        `${currentGalleryIndex + 1} / ${currentGalleryImages.length}`;
+
+    const previousButton =
+        document.querySelector('.lightbox-prev');
+
+    const nextButton =
+        document.querySelector('.lightbox-next');
+
+    const hasMultipleImages = currentGalleryImages.length > 1;
+
+    previousButton.hidden = !hasMultipleImages;
+    nextButton.hidden = !hasMultipleImages;
+}
+
+
+// Browse property pictures in full-screen mode.
+function changeLightboxImage(direction) {
+    if (currentGalleryImages.length <= 1) return;
+
+    const total = currentGalleryImages.length;
+
+    currentGalleryIndex =
+        (currentGalleryIndex + direction + total) % total;
+
+    updateGalleryDisplay();
+    updateLightboxImage();
+}
+
+
+// Close the full-screen viewer.
+function closeImageLightbox() {
+    const lightbox = document.getElementById('imageLightbox');
+
+    if (!lightbox) return;
+
+    lightbox.classList.remove('open');
+
+    // Keep the page locked if the property details modal is still open.
+    const propertyModal = document.getElementById('propertyModal');
+
+    document.body.style.overflow =
+        propertyModal?.classList.contains('open') ? 'hidden' : '';
+}
+
+
+// Allow keyboard navigation and closing.
+document.addEventListener('keydown', function(event) {
+    const lightbox = document.getElementById('imageLightbox');
+
+    if (!lightbox?.classList.contains('open')) return;
+
+    if (event.key === 'Escape') {
+        closeImageLightbox();
+    } else if (event.key === 'ArrowRight') {
+        changeLightboxImage(1);
+    } else if (event.key === 'ArrowLeft') {
+        changeLightboxImage(-1);
+    }
+});
 
 
 

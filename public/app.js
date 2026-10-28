@@ -367,9 +367,8 @@ async function contactProperty(id) {
 //   encodeURIComponent(String(property._id));
 
 
-
-const propertyURL =
-  `https://lekkihomesandproperties.onrender.com/share/property/` +
+  const propertyURL =
+  `https://lekkihomesandproperties.com/share/property/` +
   encodeURIComponent(String(property._id));
 
 

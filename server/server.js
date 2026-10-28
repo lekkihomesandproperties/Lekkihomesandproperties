@@ -15,8 +15,6 @@ const app=express(); app.set('trust proxy',1);app.use(cors());app.use(express.js
 // Shareable property page for WhatsApp image previews
 app.get('/share/property/:id', async (req, res) => {
   try {
-    const mongoose = require('mongoose');
-
     if (!mongoose.isValidObjectId(req.params.id)) {
       return res.status(404).send('Property not found.');
     }
@@ -30,22 +28,35 @@ app.get('/share/property/:id', async (req, res) => {
       return res.status(404).send('Property not found.');
     }
 
-    // Get the first available property image.
+    // Your official frontend domain
+    const siteUrl = 'https://lekkihomesandproperties.com';
+
+    // Get the first available property image
     const image =
-      property.images?.find(url => typeof url === 'string' && url.trim()) ||
+      property.images?.find(
+        url => typeof url === 'string' && url.trim()
+      ) ||
       property.image ||
       '';
 
-    // Use your live website domain here after deployment.
-    // Do not use localhost for WhatsApp previews.
-    const siteUrl = `${req.protocol}://${req.get('host')}`;
-
+    // Use the absolute image URL when available
     const absoluteImage = image
       ? new URL(image, siteUrl).href
       : `${siteUrl}/assets/default-property.jpg`;
 
-    const title = property.title || 'Property for Sale or Rent';
-    const location = property.location || 'Location available on request';
+    const propertyUrl =
+      `${siteUrl}/property-listings.html?property=` +
+      encodeURIComponent(String(property._id));
+
+    // Keep the sharing page URL on your official domain
+    const shareUrl =
+      `${siteUrl}/share/property/${property._id}`;
+
+    const title =
+      property.title || 'Property for Sale or Rent';
+
+    const location =
+      property.location || 'Location available on request';
 
     const price =
       property.price !== undefined && property.price !== null
@@ -56,7 +67,7 @@ app.get('/share/property/:id', async (req, res) => {
       `${title} in ${location}. Price: ${price}. ` +
       'Discover this property at LekkiHomesAndProperties.';
 
-    // Escape text before inserting it into HTML.
+    // Escape HTML values
     const escapeHtml = value =>
       String(value).replace(/[&<>"']/g, char => ({
         '&': '&amp;',
@@ -69,9 +80,8 @@ app.get('/share/property/:id', async (req, res) => {
     const escapedTitle = escapeHtml(title);
     const escapedDescription = escapeHtml(description);
     const escapedImage = escapeHtml(absoluteImage);
-    const escapedUrl = escapeHtml(
-      `${siteUrl}/share/property/${property._id}`
-    );
+    const escapedShareUrl = escapeHtml(shareUrl);
+    const escapedPropertyUrl = escapeHtml(propertyUrl);
 
     res.set('Cache-Control', 'public, max-age=300');
 
@@ -92,18 +102,15 @@ app.get('/share/property/:id', async (req, res) => {
   <meta property="og:image" content="${escapedImage}">
   <meta property="og:image:secure_url" content="${escapedImage}">
   <meta property="og:image:alt" content="${escapedTitle}">
-  <meta property="og:url" content="${escapedUrl}">
+  <meta property="og:url" content="${escapedShareUrl}">
 
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="${escapedTitle}">
   <meta name="twitter:description" content="${escapedDescription}">
   <meta name="twitter:image" content="${escapedImage}">
 
-<meta http-equiv="refresh"
-      content="3;url=/property-listings.html?property=${encodeURIComponent(String(property._id))}">
-
-
-
+  <meta http-equiv="refresh"
+        content="3;url=${escapedPropertyUrl}">
 </head>
 
 <body>
@@ -117,7 +124,7 @@ app.get('/share/property/:id', async (req, res) => {
   >
 
   <p>
-    <a href="/property-listings.html?property=${encodeURIComponent(String(property._id))}">
+    <a href="${escapedPropertyUrl}">
       View Property Details
     </a>
   </p>
@@ -128,13 +135,144 @@ app.get('/share/property/:id', async (req, res) => {
     console.error('Property sharing page error:', error);
     res.status(500).send('Could not load property sharing page.');
   }
-});app.use('/api/auth',require('./routes/auth'));app.use('/api/properties',require('./routes/properties'));
+});
+
+
+// // Shareable property page for WhatsApp image previews
+// app.get('/share/property/:id', async (req, res) => {
+//   try {
+//     const mongoose = require('mongoose');
+
+//     if (!mongoose.isValidObjectId(req.params.id)) {
+//       return res.status(404).send('Property not found.');
+//     }
+
+//     const property = await Property.findOne({
+//       _id: req.params.id,
+//       isPublished: true
+//     }).lean();
+
+//     if (!property) {
+//       return res.status(404).send('Property not found.');
+//     }
+
+//     // Get the first available property image.
+//     const image =
+//       property.images?.find(url => typeof url === 'string' && url.trim()) ||
+//       property.image ||
+//       '';
+
+//     // Use your live website domain here after deployment.
+//     // Do not use localhost for WhatsApp previews.
+//     const siteUrl = `${req.protocol}://${req.get('host')}`;
+
+//     const absoluteImage = image
+//       ? new URL(image, siteUrl).href
+//       : `${siteUrl}/assets/default-property.jpg`;
+
+//     const title = property.title || 'Property for Sale or Rent';
+//     const location = property.location || 'Location available on request';
+
+//     const price =
+//       property.price !== undefined && property.price !== null
+//         ? `₦${Number(property.price).toLocaleString('en-NG')}`
+//         : 'Contact us for price';
+
+//     const description =
+//       `${title} in ${location}. Price: ${price}. ` +
+//       'Discover this property at LekkiHomesAndProperties.';
+
+//     // Escape text before inserting it into HTML.
+//     const escapeHtml = value =>
+//       String(value).replace(/[&<>"']/g, char => ({
+//         '&': '&amp;',
+//         '<': '&lt;',
+//         '>': '&gt;',
+//         '"': '&quot;',
+//         "'": '&#39;'
+//       })[char]);
+
+//     const escapedTitle = escapeHtml(title);
+//     const escapedDescription = escapeHtml(description);
+//     const escapedImage = escapeHtml(absoluteImage);
+//     const escapedUrl = escapeHtml(
+//       `${siteUrl}/share/property/${property._id}`
+//     );
+
+//     res.set('Cache-Control', 'public, max-age=300');
+
+//     res.send(`<!DOCTYPE html>
+// <html lang="en">
+// <head>
+//   <meta charset="UTF-8">
+//   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+//   <title>${escapedTitle} | LekkiHomesAndProperties</title>
+
+//   <meta name="description" content="${escapedDescription}">
+
+//   <meta property="og:type" content="website">
+//   <meta property="og:site_name" content="LekkiHomesAndProperties">
+//   <meta property="og:title" content="${escapedTitle}">
+//   <meta property="og:description" content="${escapedDescription}">
+//   <meta property="og:image" content="${escapedImage}">
+//   <meta property="og:image:secure_url" content="${escapedImage}">
+//   <meta property="og:image:alt" content="${escapedTitle}">
+//   <meta property="og:url" content="${escapedUrl}">
+
+//   <meta name="twitter:card" content="summary_large_image">
+//   <meta name="twitter:title" content="${escapedTitle}">
+//   <meta name="twitter:description" content="${escapedDescription}">
+//   <meta name="twitter:image" content="${escapedImage}">
+
+// <meta http-equiv="refresh"
+//       content="3;url=/property-listings.html?property=${encodeURIComponent(String(property._id))}">
+
+
+
+// </head>
+
+// <body>
+//   <h1>${escapedTitle}</h1>
+//   <p>${escapedDescription}</p>
+
+//   <img
+//     src="${escapedImage}"
+//     alt="${escapedTitle}"
+//     style="max-width:100%;height:auto;"
+//   >
+
+//   <p>
+//     <a href="/property-listings.html?property=${encodeURIComponent(String(property._id))}">
+//       View Property Details
+//     </a>
+//   </p>
+// </body>
+// </html>`);
+
+//   } catch (error) {
+//     console.error('Property sharing page error:', error);
+//     res.status(500).send('Could not load property sharing page.');
+//   }
+// });
+
+
+
+
+
+
+
+
+app.use('/api/auth',require('./routes/auth'));app.use('/api/properties',require('./routes/properties'));
 
 app.use('/api/contact',require('./routes/contact'));
 
 
 app.use('/api/payments',require('./routes/payments'));app.use('/api/uploads',require('./routes/uploads'));
 app.get('*',(req,res)=>res.sendFile(path.join(__dirname,'../public/index.html')));
+
+
+
 
 
 const PORT=process.env.PORT||5000;

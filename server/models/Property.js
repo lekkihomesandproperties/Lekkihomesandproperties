@@ -27,11 +27,11 @@ const schema = new mongoose.Schema({
     min: 0
   },
 
-  type: {
-    type: String,
-    enum: ['For Sale', 'For Lease'],
-    default: 'For Sale'
-  },
+type: {
+type: String,
+enum: ["For Sale", "For Rent", "For Lease"],
+default: "For Sale"
+},
 
   category: {
     type: String,

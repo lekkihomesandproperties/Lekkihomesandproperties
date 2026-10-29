@@ -244,7 +244,7 @@ $('#propertyForm')?.addEventListener('submit', async event => {
 
   try {
     // Start with the images already saved for this property.
-    let imageUrls = [...existingPropertyImages];
+    // let imageUrls = [...existingPropertyImages];
 
     // If the admin supplies a different image URL, make it the main image.
     if (imageUrl) {
@@ -254,16 +254,56 @@ $('#propertyForm')?.addEventListener('submit', async event => {
       ];
     }
 
+
+    
     // Upload each newly selected file to Cloudinary through your backend.
-    for (let index = 0; index < selectedFiles.length; index++) {
-      msg(
-        `Uploading image ${index + 1} of ${selectedFiles.length}...`
-      );
+    // for (let index = 0; index < selectedFiles.length; index++) {
+    //   msg(
+    //     `Uploading image ${index + 1} of ${selectedFiles.length}...`
+    //   );
 
-      const uploadedUrl = await uploadPropertyImage(selectedFiles[index]);
+    //   const uploadedUrl = await uploadPropertyImage(selectedFiles[index]);
 
-      imageUrls.push(uploadedUrl);
-    }
+    //   imageUrls.push(uploadedUrl);
+    // }
+
+
+const uploadLimit = 3;
+const imageUrls = new Array(selectedFiles.length);
+let nextIndex = 0;
+let completedUploads = 0;
+
+async function uploadWorker() {
+  while (nextIndex < selectedFiles.length) {
+    const index = nextIndex++;
+
+    msg(
+      `Uploading and optimizing images: ${completedUploads}/${selectedFiles.length} completed...`
+    );
+
+    const uploadedUrl = await uploadPropertyImage(selectedFiles[index]);
+
+    imageUrls[index] = uploadedUrl;
+    completedUploads++;
+
+    msg(
+      `Uploading and optimizing images: ${completedUploads}/${selectedFiles.length} completed...`
+    );
+  }
+}
+
+try {
+  await Promise.all(
+    Array.from(
+      { length: Math.min(uploadLimit, selectedFiles.length) },
+      () => uploadWorker()
+    )
+  );
+} catch (error) {
+  console.error('Property image upload failed:', error);
+  throw error;
+}
+    
 
     // Remove duplicate URLs while preserving their order.
     imageUrls = [...new Set(imageUrls)];

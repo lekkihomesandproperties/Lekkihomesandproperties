@@ -243,74 +243,136 @@ $('#propertyForm')?.addEventListener('submit', async event => {
   }
 
   try {
-    // Start with the images already saved for this property.
-    // let imageUrls = [...existingPropertyImages];
 
-    // If the admin supplies a different image URL, make it the main image.
-    if (imageUrl) {
-      imageUrls = [
-        imageUrl,
-        ...imageUrls.filter(url => url !== imageUrl)
-      ];
-    }
+//     // Start with the images already saved for this property.
+//     // let imageUrls = [...existingPropertyImages];
+
+//     // If the admin supplies a different image URL, make it the main image.
+//     if (imageUrl) {
+//       imageUrls = [
+//         imageUrl,
+//         ...imageUrls.filter(url => url !== imageUrl)
+//       ];
+//     }
 
 
+   
+
+// const uploadLimit = 3;
+// const imageUrls = new Array(selectedFiles.length);
+// let nextIndex = 0;
+// let completedUploads = 0;
+
+// async function uploadWorker() {
+//   while (nextIndex < selectedFiles.length) {
+//     const index = nextIndex++;
+
+//     msg(
+//       `Uploading and optimizing images: ${completedUploads}/${selectedFiles.length} completed...`
+//     );
+
+//     const uploadedUrl = await uploadPropertyImage(selectedFiles[index]);
+
+//     imageUrls[index] = uploadedUrl;
+//     completedUploads++;
+
+//     msg(
+//       `Uploading and optimizing images: ${completedUploads}/${selectedFiles.length} completed...`
+//     );
+//   }
+// }
+
+// try {
+//   await Promise.all(
+//     Array.from(
+//       { length: Math.min(uploadLimit, selectedFiles.length) },
+//       () => uploadWorker()
+//     )
+//   );
+
+
+
+  
+// } 
+
+
+// catch (error) {
+//   console.error('Property image upload failed:', error);
+//   throw error;
+// }
     
-    // Upload each newly selected file to Cloudinary through your backend.
-    // for (let index = 0; index < selectedFiles.length; index++) {
-    //   msg(
-    //     `Uploading image ${index + 1} of ${selectedFiles.length}...`
-    //   );
-
-    //   const uploadedUrl = await uploadPropertyImage(selectedFiles[index]);
-
-    //   imageUrls.push(uploadedUrl);
-    // }
 
 
+
+
+
+//     // Remove duplicate URLs while preserving their order.
+//     imageUrls = [...new Set(imageUrls)];
+
+//     if (imageUrls.length === 0) {
+//       throw Error('No property images are available to save.');
+//     }
+
+
+// Start with the images already saved for this property.
+let imageUrls = [...existingPropertyImages];
+
+// If the admin supplies a different image URL, make it the main image.
+if (imageUrl) {
+  imageUrls = [
+    imageUrl,
+    ...imageUrls.filter(url => url !== imageUrl)
+  ];
+}
+
+// Upload newly selected images to Cloudinary.
+// Upload up to three images simultaneously.
 const uploadLimit = 3;
-const imageUrls = new Array(selectedFiles.length);
+const uploadedUrls = new Array(selectedFiles.length);
+
 let nextIndex = 0;
 let completedUploads = 0;
 
 async function uploadWorker() {
-  while (nextIndex < selectedFiles.length) {
+  while (true) {
     const index = nextIndex++;
 
+    if (index >= selectedFiles.length) {
+      return;
+    }
+
     msg(
-      `Uploading and optimizing images: ${completedUploads}/${selectedFiles.length} completed...`
+      `Uploading images: ${completedUploads}/${selectedFiles.length} completed...`
     );
 
     const uploadedUrl = await uploadPropertyImage(selectedFiles[index]);
 
-    imageUrls[index] = uploadedUrl;
+    uploadedUrls[index] = uploadedUrl;
     completedUploads++;
 
     msg(
-      `Uploading and optimizing images: ${completedUploads}/${selectedFiles.length} completed...`
+      `Uploading images: ${completedUploads}/${selectedFiles.length} completed...`
     );
   }
 }
 
-try {
-  await Promise.all(
-    Array.from(
-      { length: Math.min(uploadLimit, selectedFiles.length) },
-      () => uploadWorker()
-    )
-  );
-} catch (error) {
-  console.error('Property image upload failed:', error);
-  throw error;
+await Promise.all(
+  Array.from(
+    { length: Math.min(uploadLimit, selectedFiles.length) },
+    () => uploadWorker()
+  )
+);
+
+// Append the new image URLs to the existing images.
+imageUrls.push(...uploadedUrls);
+
+// Remove duplicate URLs while preserving their order.
+imageUrls = [...new Set(imageUrls)];
+
+if (imageUrls.length === 0) {
+  throw Error('No property images are available to save.');
 }
-    
 
-    // Remove duplicate URLs while preserving their order.
-    imageUrls = [...new Set(imageUrls)];
-
-    if (imageUrls.length === 0) {
-      throw Error('No property images are available to save.');
-    }
 
     // Build the property data.
     const payload = {};

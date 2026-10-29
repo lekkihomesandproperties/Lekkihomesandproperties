@@ -6,7 +6,17 @@
   gtag('js', new Date());
 
   gtag('config', 'G-L241CWL60N');
-</script><body><header class="site-header"><div class="container nav-wrap"><a class="brand" href="index.html" aria-label="LEKKIHOMESANDPROPERTIES home"><img src="assets/logo.png" alt="LEKKIHOMESANDPROPERTIES logo"></a><button class="menu-toggle" aria-label="Open navigation">☰ Menu</button><nav class="nav-links"><a href="index.html">Home</a><a href="about-us.html">About Us</a><a href="property-listings.html">Properties</a><a href="contact-us.html">Contact Us</a><a href="gallery.html">Gallery</a><a href="projects.html">Projects</a></nav></div></header><main><section class="page-hero"><div class="container"><span class="eyebrow" style="color:#9b7616">Explore available options</span><h1>Find a property that fits your plans.</h1><p>Browse land, homes and rental opportunities. Ask our team to confirm availability, title and all applicable fees.</p></div></section><section class="section"><div class="container"><div class="searchbar" style="margin:0 0 28px;grid-template-columns:2fr 1fr 1fr auto"><input id="propertySearch" placeholder="Search location or title" oninput="renderProperties()"><select id="typeFilter" onchange="renderProperties()"><option value="">Sale or lease</option><option>For Sale</option><option>For Lease</option></select><select id="categoryFilter" onchange="renderProperties()"><option value="">All categories</option><option>Land</option><option>House</option><option>Apartment</option><option>Commercial</option></select><button class="btn btn-primary" onclick="renderProperties()">Filter</button></div><div class="property-grid" id="propertyGrid"><div class="empty-state">Loading listings…</div></div>
+</script><body><header class="site-header"><div class="container nav-wrap"><a class="brand" href="index.html" aria-label="LEKKIHOMESANDPROPERTIES home"><img src="assets/logo.png" alt="LEKKIHOMESANDPROPERTIES logo"></a><button class="menu-toggle" aria-label="Open navigation">☰ Menu</button><nav class="nav-links"><a href="index.html">Home</a><a href="about-us.html">About Us</a><a href="property-listings.html">Properties</a><a href="contact-us.html">Contact Us</a><a href="gallery.html">Gallery</a><a href="projects.html">Projects</a></nav></div></header><main><section class="page-hero"><div class="container"><span class="eyebrow" style="color:#9b7616">Explore available options</span><h1>Find a property that fits your plans.</h1><p>Browse land, homes and rental opportunities. Ask our team to confirm availability, title and all applicable fees.</p></div></section><section class="section"><div class="container"><div class="searchbar" style="margin:0 0 28px;grid-template-columns:2fr 1fr 1fr auto"><input id="propertySearch" placeholder="Search location or title" oninput="renderProperties()">
+  
+<select id="typeFilter" onchange="renderProperties()">
+  <option value="">All listing types</option>
+  <option value="For Sale">For Sale</option>
+  <option value="For Rent">For Rent</option>
+  <option value="For Lease">For Lease</option>
+</select>
+  
+  
+  <select id="categoryFilter" onchange="renderProperties()"><option value="">All categories</option><option>Land</option><option>House</option><option>Apartment</option><option>Commercial</option></select><button class="btn btn-primary" onclick="renderProperties()">Filter</button></div><div class="property-grid" id="propertyGrid"><div class="empty-state">Loading listings…</div></div>
     
     <p class="muted" style="margin-top:22px;font-size:.88rem">Your future wealth begins with the decisions you make today. Invest in real estate and give your tomorrow a stronger foundation.</p>
 

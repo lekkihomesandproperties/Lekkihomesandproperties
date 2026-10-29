@@ -1,8 +1,9 @@
 
-const router = require('express').Router();
-const multer = require('multer');
-const { v2: cloudinary } = require('cloudinary');
-const auth = require('../middleware/auth');
+const router = require("express").Router();
+const multer = require("multer");
+const sharp = require("sharp");
+const { v2: cloudinary } = require("cloudinary");
+const auth = require("../middleware/auth");
 
 const configured = Boolean(
   process.env.CLOUDINARY_CLOUD_NAME &&
@@ -23,15 +24,20 @@ const upload = multer({
   storage: multer.memoryStorage(),
 
   limits: {
-    fileSize: 5 * 1024 * 1024
+    fileSize: 5 * 1024 * 1024,
+    files: 1
   },
 
   fileFilter: (req, file, cb) => {
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp"
+    ];
 
     if (!allowedTypes.includes(file.mimetype)) {
       return cb(
-        new Error('Only JPG, PNG and WEBP images are allowed.')
+        new Error("Only JPG, PNG and WEBP images are allowed.")
       );
     }
 
@@ -39,43 +45,63 @@ const upload = multer({
   }
 });
 
-// Upload one image per request.
-// admin.js calls this endpoint separately for each selected image.
-router.post('/property-image', auth, (req, res) => {
+// Convert an image to optimized WebP before uploading.
+async function compressImage(buffer) {
+  return sharp(buffer, {
+    limitInputPixels: 40000000
+  })
+    .rotate()
+    .resize({
+      width: 1800,
+      height: 1200,
+      fit: "inside",
+      withoutEnlargement: true
+    })
+    .webp({
+      quality: 82,
+      effort: 4
+    })
+    .toBuffer();
+}
+
+// Upload one optimized image per request.
+// Existing admin.js can continue calling this endpoint.
+router.post("/property-image", auth, (req, res) => {
   if (!configured) {
     return res.status(503).json({
-      message: 'Configure Cloudinary credentials in .env to enable image uploads.'
+      message:
+        "Configure Cloudinary credentials to enable image uploads."
     });
   }
 
-  upload.single('image')(req, res, async (err) => {
+  upload.single("image")(req, res, async (err) => {
     if (err) {
-      const status = err instanceof multer.MulterError ? 400 : 415;
+      const status =
+        err instanceof multer.MulterError ? 400 : 415;
 
       return res.status(status).json({
-        message: err.message || 'Image upload failed.'
+        message: err.message || "Image upload failed."
       });
     }
 
     if (!req.file) {
       return res.status(400).json({
-        message: 'Choose a JPG, PNG or WEBP image under 5 MB.'
+        message: "Choose a JPG, PNG or WEBP image under 5 MB."
       });
     }
 
     try {
+      // STEP 1: Compress the original image and convert to WebP.
+      const optimizedBuffer = await compressImage(req.file.buffer);
+
+      // STEP 2: Upload the optimized WebP to Cloudinary.
       const result = await new Promise((resolve, reject) => {
         const stream = cloudinary.uploader.upload_stream(
           {
-            folder: 'lekkihomesandproperties',
-            resource_type: 'image',
-            transformation: [
-              {
-                width: 1800,
-                height: 1200,
-                crop: 'limit'
-              }
-            ]
+            folder: "lekkihomesandproperties",
+            resource_type: "image",
+            format: "webp",
+            overwrite: false
           },
           (uploadErr, uploadResult) => {
             if (uploadErr) {
@@ -86,31 +112,37 @@ router.post('/property-image', auth, (req, res) => {
           }
         );
 
-        stream.end(req.file.buffer);
+        stream.end(optimizedBuffer);
       });
 
       if (!result || !result.secure_url) {
         return res.status(502).json({
-          message: 'Cloudinary did not return an image URL.'
+          message: "Cloudinary did not return an image URL."
         });
       }
 
+      // Keep the response compatible with the existing frontend.
       return res.status(200).json({
-        url: result.secure_url
+        url: result.secure_url,
+        format: "webp",
+        sizeKB: Math.round(optimizedBuffer.length / 1024),
+        originalSizeKB: Math.round(req.file.size / 1024),
+        width: result.width,
+        height: result.height
       });
 
     } catch (error) {
-      console.error('Cloudinary upload error:', error.message);
+      console.error("Image processing/upload error:", error);
 
       return res.status(502).json({
-        message: 'Cloudinary upload failed. Check your credentials and connection.'
+        message:
+          "Image compression or upload failed. Please try again."
       });
     }
   });
 });
 
 module.exports = router;
-
 
 
 

@@ -1,4 +1,4 @@
-const API='https://lekkihomesandproperties.onrender.com/api';
+const API = 'https://lekkihomesandproperties.com/api';
 const sampleProperties=[
  { _id:'demo1', title:'Contemporary 4-Bedroom Terrace Duplex', location:'Lekki Phase 1, Lagos', price:185000000, type:'For Sale', category:'House', beds:4, baths:4, area:'280 sqm', views:128, likes:12, image:'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1200&q=85', description:'A refined contemporary home with generous living spaces, modern finishes and convenient access to key parts of Lekki.' },
  { _id:'demo2', title:'Residential Land in a Serene Estate', location:'Sangotedo, Ajah, Lagos', price:28000000, type:'For Sale', category:'Land', beds:0, baths:0, area:'500 sqm', views:84, likes:9, image:'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=85', description:'A well-positioned plot for a future home or a long-term investment. Confirm title documents and boundaries during due diligence.' },
@@ -21,7 +21,9 @@ function propertyCard(p){return `<article class="property-card"><div class="prop
 
 
 
-alt="${esc(p.title)}" loading="lazy"><span class="tag">${esc(p.type||'For Sale')}</span></div><div class="property-body"><h3>${esc(p.title)}</h3><div class="location">⌖ ${esc(p.location)}</div><div class="price">${money(p.price)}${p.type==='For Lease'?'<small class="muted"> / year</small>':''}</div><div class="property-meta"><span>▦ ${esc(p.area||'Ask for details')}</span>${p.beds?`<span>🛏 ${p.beds} beds</span>`:''}${p.baths?`<span>♧ ${p.baths} baths</span>`:''}<span>◉ ${p.views||0} views</span></div><div class="card-actions"><button class="btn btn-green" onclick="openProperty('${p._id}')">View details</button><button class="small-btn" onclick="likeProperty('${p._id}')">♡ <span id="likes-${p._id}">${p.likes||0}</span></button><button class="small-btn" onclick="shareProperty('${p._id}')">↗ Share</button></div></div></article>`}
+alt="${esc(p.title)}" loading="lazy"><span class="tag">${esc(p.type||'For Sale')}</span></div><div class="property-body"><h3>${esc(p.title)}</h3><div class="location">⌖ ${esc(p.location)}</div><div class="price">${money(p.price)}${['For Lease', 'For Rent'].includes(p.type)
+    ? '<small class="muted"> / year</small>'
+    : ''}</div><div class="property-meta"><span>▦ ${esc(p.area||'Ask for details')}</span>${p.beds?`<span>🛏 ${p.beds} beds</span>`:''}${p.baths?`<span>♧ ${p.baths} baths</span>`:''}<span>◉ ${p.views||0} views</span></div><div class="card-actions"><button class="btn btn-green" onclick="openProperty('${p._id}')">View details</button><button class="small-btn" onclick="likeProperty('${p._id}')">♡ <span id="likes-${p._id}">${p.likes||0}</span></button><button class="small-btn" onclick="shareProperty('${p._id}')">↗ Share</button></div></div></article>`}
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 async function renderProperties(target='propertyGrid',limit=99){const el=document.getElementById(target);if(!el)return;let props=await getProperties();const q=(document.getElementById('propertySearch')?.value||'').toLowerCase();const type=document.getElementById('typeFilter')?.value||'';const category=document.getElementById('categoryFilter')?.value||'';props=props.filter(p=>(!q||`${p.title} ${p.location}`.toLowerCase().includes(q))&&(!type||p.type===type)&&(!category||p.category===category)).slice(0,limit);el.innerHTML=props.length?props.map(propertyCard).join(''):'<div class="empty-state">No matching properties found. Try another search.</div>'}
 
@@ -192,11 +194,10 @@ async function openProperty(id) {
 
             <div class="price">
                 ${money(p.price)}
-                ${p.type === 'For Lease'
-                    ? '<small class="muted"> / year</small>'
-                    : ''}
+               ${['For Lease', 'For Rent'].includes(p.type)
+    ? '<small class="muted"> / year</small>'
+    : ''}
             </div>
-
             <p>
                 ${esc(
                     p.description ||

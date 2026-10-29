@@ -9,7 +9,10 @@ const mongoose=require('mongoose');
 const path=require('path');
 const Property = require('./models/Property');
 const cors=require('cors');const rateLimit=require('express-rate-limit');
-const app=express(); app.set('trust proxy',1);app.use(cors());app.use(express.json({limit:'1mb'}));app.use(express.urlencoded({extended:true}));app.use('/api/',rateLimit({windowMs:15*60*1000,max:300,standardHeaders:true,legacyHeaders:false}));app.use(express.static(path.join(__dirname,'../public')));app.get('/health',(req,res)=>res.json({ok:true,service:'LEKKIHOMESANDPROPERTIES API'}));
+const app=express();app.use(
+  "/uploads",
+  express.static(path.join(__dirname, "uploads"))
+);app.set('trust proxy',1);app.use(cors());app.use(express.json({limit:'1mb'}));app.use(express.urlencoded({extended:true}));app.use('/api/',rateLimit({windowMs:15*60*1000,max:300,standardHeaders:true,legacyHeaders:false}));app.use(express.static(path.join(__dirname,'../public')));app.get('/health',(req,res)=>res.json({ok:true,service:'LEKKIHOMESANDPROPERTIES API'}));
 
 
 // Shareable property page for WhatsApp image previews
@@ -48,6 +51,8 @@ app.get('/share/property/:id', async (req, res) => {
       `${siteUrl}/property-listings.html?property=` +
       encodeURIComponent(String(property._id));
 
+
+      
     // Keep the sharing page URL on your official domain
     const shareUrl =
       `${siteUrl}/share/property/${property._id}`;

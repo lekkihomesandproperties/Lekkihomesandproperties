@@ -10,7 +10,20 @@
     
     
     
-    <div class="field"><label>Email</label><input name="email" type="email" required></div><div class="field"><label>Password</label><input name="password" type="password" required></div><button class="btn btn-primary">Sign in</button></form></div><div id="dashboardPanel" class="hidden"><div class="admin-layout"><aside class="admin-sidebar"><strong>LEKKIHOMES Admin</strong><a href="#propertyEditor">＋ Add property</a><a href="property-listings.html">View public website</a><a href="#" onclick="adminLogout()">Log out</a></aside><div class="admin-panel"><h2 style="color:var(--green);margin-top:0">Property manager</h2><form id="propertyForm"><input type="hidden" name="id"><div class="field"><label>Property title</label><input name="title" required maxlength="160"></div><div class="field"><label>Location</label><input name="location" required maxlength="200"></div><div class="field"><label>Price (NGN)</label><input name="price" type="number" min="0" required></div><div class="field"><label>Listing type</label><select name="type"><option>For Sale</option><option>For Lease</option></select></div><div class="field"><label>Category</label><select name="category"><option>Land</option><option>House</option><option>Apartment</option><option>Commercial</option></select></div><div class="field"><label>Bedrooms</label><input name="beds" type="number" min="0" value="0"></div><div class="field"><label>Bathrooms</label><input name="baths" type="number" min="0" value="0"></div><div class="field"><label>Area / size</label><input name="area" placeholder="e.g. 500 sqm"></div>
+    <div class="field"><label>Email</label><input name="email" type="email" required></div><div class="field"><label>Password</label><input name="password" type="password" required></div><button class="btn btn-primary">Sign in</button></form></div><div id="dashboardPanel" class="hidden"><div class="admin-layout"><aside class="admin-sidebar"><strong>LEKKIHOMES Admin</strong><a href="#propertyEditor">＋ Add property</a><a href="property-listings.html">View public website</a><a href="#" onclick="adminLogout()">Log out</a></aside><div class="admin-panel"><h2 style="color:var(--green);margin-top:0">Property manager</h2><form id="propertyForm"><input type="hidden" name="id"><div class="field"><label>Property title</label><input name="title" required maxlength="160"></div><div class="field"><label>Location</label><input name="location" required maxlength="200"></div><div class="field"><label>Price (NGN)</label><input name="price" type="number" min="0" required></div>
+      
+      
+    <div class="field">
+  <label>Listing type</label>
+  <select name="type" required>
+    <option value="For Sale">For Sale</option>
+    <option value="For Rent">For Rent</option>
+    <option value="For Lease">For Lease</option>
+  </select>
+</div>
+      
+      
+      <div class="field"><label>Category</label><select name="category"><option>Land</option><option>House</option><option>Apartment</option><option>Commercial</option></select></div><div class="field"><label>Bedrooms</label><input name="beds" type="number" min="0" value="0"></div><div class="field"><label>Bathrooms</label><input name="baths" type="number" min="0" value="0"></div><div class="field"><label>Area / size</label><input name="area" placeholder="e.g. 500 sqm"></div>
         
         
         

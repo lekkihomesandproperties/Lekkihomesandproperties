@@ -775,3 +775,55 @@
         right: 5px;
     }
 }
+
+/* Property Listing Pagination */
+.property-pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 35px;
+}
+
+.page-btn {
+    min-width: 42px;
+    height: 42px;
+    padding: 0 13px;
+    border: 1px solid #06452e;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #06452e;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.page-btn:hover:not(:disabled),
+.page-btn.active {
+    background: #06452e;
+    color: #ffffff;
+}
+
+.page-btn.active {
+    border-color: #b58b20;
+    box-shadow: 0 0 0 1px #b58b20;
+}
+
+.page-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+@media (max-width: 480px) {
+    .property-pagination {
+        gap: 5px;
+    }
+
+    .page-btn {
+        min-width: 35px;
+        height: 38px;
+        padding: 0 9px;
+        font-size: 13px;
+    }
+}

@@ -29,24 +29,83 @@ const locationIcon = `
 async function getProperties(){try{const r=await fetch(API+'/properties');if(!r.ok)throw 0;const d=await r.json();return d.properties?.length?d.properties:sampleProperties}catch{return sampleProperties}}
 
 
-function propertyCard(p){return `<article class="property-card"><div class="property-image">
-    
-    
-    
+function propertyCard(p) {
+    return `
+    <article class="property-card">
 
+        <div class="property-image" style="
+            position: relative;
+            width: 100%;
+            aspect-ratio: 4 / 3;
+            overflow: hidden;
+        ">
 
-    <img src="${esc(p.images?.[0] || p.image || 'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=900&q=80')}"
+            <img
+                src="${esc(p.images?.[0] || p.image || 'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=900&q=80')}"
+                alt="${esc(p.title)}"
+                loading="lazy"
+                style="
+                    position: absolute;
+                    inset: 0;
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                    object-position: center;
+                    display: block;
+                "
+            >
 
+            <span class="tag">${esc(p.type || 'For Sale')}</span>
 
+        </div>
 
-alt="${esc(p.title)}" loading="lazy"><span class="tag">${esc(p.type||'For Sale')}</span></div><div class="property-body"><h3>${esc(p.title)}</h3><div class="location">${locationIcon} ${esc(p.location)}
-</div><div class="price">${money(p.price)}${['For Lease', 'For Rent'].includes(p.type)
-    ? '<small class="muted"> / year</small>'
-    : ''}</div><div class="property-meta"><span>▦ ${esc(p.area||'Ask for details')}</span>${p.beds?`<span>🛏 ${p.beds} beds</span>`:''}${p.baths?`<span>♧ ${p.baths} baths</span>`:''}<span>◉ ${p.views||0} views</span></div><div class="card-actions"><button class="btn btn-green" onclick="openProperty('${p._id}')">View details</button><button class="small-btn" onclick="likeProperty('${p._id}')">♡ <span id="likes-${p._id}">${p.likes||0}</span></button><button class="small-btn" onclick="shareProperty('${p._id}')">↗ Share</button></div></div></article>`}
+        <div class="property-body">
+
+            <h3>${esc(p.title)}</h3>
+
+            <div class="location">
+                ${locationIcon} ${esc(p.location)}
+            </div>
+
+            <div class="price">
+                ${money(p.price)}
+                ${['For Lease', 'For Rent'].includes(p.type)
+                    ? '<small class="muted"> / year</small>'
+                    : ''}
+            </div>
+
+            <div class="property-meta">
+                <span>▦ ${esc(p.area || 'Ask for details')}</span>
+                ${p.beds ? `<span>🛏 ${p.beds} beds</span>` : ''}
+                ${p.baths ? `<span>♧ ${p.baths} baths</span>` : ''}
+                <span>◉ ${p.views || 0} views</span>
+            </div>
+
+            <div class="card-actions">
+                <button class="btn btn-green"
+                    onclick="openProperty('${p._id}')">
+                    View details
+                </button>
+
+                <button class="small-btn"
+                    onclick="likeProperty('${p._id}')">
+                    ♡ <span id="likes-${p._id}">${p.likes || 0}</span>
+                </button>
+
+                <button class="small-btn"
+                    onclick="shareProperty('${p._id}')">
+                    ↗ Share
+                </button>
+            </div>
+
+        </div>
+
+    </article>
+    `;
+}
+
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 async function renderProperties(target='propertyGrid',limit=99){const el=document.getElementById(target);if(!el)return;let props=await getProperties();const q=(document.getElementById('propertySearch')?.value||'').toLowerCase();const type=document.getElementById('typeFilter')?.value||'';const category=document.getElementById('categoryFilter')?.value||'';props=props.filter(p=>(!q||`${p.title} ${p.location}`.toLowerCase().includes(q))&&(!type||p.type===type)&&(!category||p.category===category)).slice(0,limit);el.innerHTML=props.length?props.map(propertyCard).join(''):'<div class="empty-state">No matching properties found. Try another search.</div>'}
-
-
 
 // async function openProperty(id)
 

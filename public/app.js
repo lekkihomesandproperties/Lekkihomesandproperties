@@ -8,6 +8,24 @@ const sampleProperties=[
  { _id:'demo6', title:'Fully Serviced 2-Bedroom Apartment', location:'Oniru, Victoria Island axis', price:12500000, type:'For Lease', category:'Apartment', beds:2, baths:2, area:'110 sqm', views:98, likes:11, image:'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=85', description:'A well-presented apartment with convenient access to business districts, restaurants and lifestyle amenities.' }
 ];
 const money=n=>'₦'+Number(n||0).toLocaleString('en-NG');
+const locationIcon = `
+<svg 
+    class="location-pin-icon"
+    xmlns="http://www.w3.org/2000/svg"
+    width="19"
+    height="19"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="#16834a"
+    stroke-width="1.8"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true"
+    style="vertical-align:-4px;flex-shrink:0;"
+>
+    <path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/>
+    <path d="M8.8 11.5V9.2L12 7l3.2 2.2v2.3M10.5 14v-2.5h3V14"/>
+</svg>`;
 async function getProperties(){try{const r=await fetch(API+'/properties');if(!r.ok)throw 0;const d=await r.json();return d.properties?.length?d.properties:sampleProperties}catch{return sampleProperties}}
 
 
@@ -21,7 +39,8 @@ function propertyCard(p){return `<article class="property-card"><div class="prop
 
 
 
-alt="${esc(p.title)}" loading="lazy"><span class="tag">${esc(p.type||'For Sale')}</span></div><div class="property-body"><h3>${esc(p.title)}</h3><div class="location">⌖ ${esc(p.location)}</div><div class="price">${money(p.price)}${['For Lease', 'For Rent'].includes(p.type)
+alt="${esc(p.title)}" loading="lazy"><span class="tag">${esc(p.type||'For Sale')}</span></div><div class="property-body"><h3>${esc(p.title)}</h3><div class="location">${locationIcon} ${esc(p.location)}
+</div><div class="price">${money(p.price)}${['For Lease', 'For Rent'].includes(p.type)
     ? '<small class="muted"> / year</small>'
     : ''}</div><div class="property-meta"><span>▦ ${esc(p.area||'Ask for details')}</span>${p.beds?`<span>🛏 ${p.beds} beds</span>`:''}${p.baths?`<span>♧ ${p.baths} baths</span>`:''}<span>◉ ${p.views||0} views</span></div><div class="card-actions"><button class="btn btn-green" onclick="openProperty('${p._id}')">View details</button><button class="small-btn" onclick="likeProperty('${p._id}')">♡ <span id="likes-${p._id}">${p.likes||0}</span></button><button class="small-btn" onclick="shareProperty('${p._id}')">↗ Share</button></div></div></article>`}
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
@@ -188,9 +207,9 @@ async function openProperty(id) {
                 ${esc(p.title)}
             </h2>
 
-            <p class="location">
-                ⌖ ${esc(p.location)}
-            </p>
+          <p class="location">
+             ${locationIcon} ${esc(p.location)}
+         </p>
 
             <div class="price">
                 ${money(p.price)}

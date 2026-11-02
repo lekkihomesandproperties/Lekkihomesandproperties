@@ -51,35 +51,9 @@
             <div class="field"><label>Location</label><input name="location" required maxlength="200"></div>
             <div class="field"><label>Price (NGN)</label><input name="price" type="number" min="0" required></div>
 
-            <!-- Insert this block immediately after the existing Price (NGN) field inside #propertyForm. -->
-<fieldset class="form-panel" style="margin:20px 0;padding:18px;border:1px solid var(--line);">
-  <legend style="font-weight:700;color:var(--green);padding:0 8px;">Online payment settings (Paystack)</legend>
-  <div class="field">
-    <label><input type="checkbox" name="paymentEnabled"> Enable online payment for this property</label>
-    <small>Customers will see payment options on this property's details page.</small>
-  </div>
-  <div class="field">
-    <label><input type="checkbox" name="allowFullPayment" checked> Allow full payment</label>
-  </div>
-  <div class="field">
-    <label><input type="checkbox" name="allowDeposit" checked> Allow fixed deposit</label>
-    <label for="depositAmount">Fixed deposit amount (NGN)</label>
-    <input id="depositAmount" name="depositAmount" type="number" min="1" step="1" placeholder="e.g. 5000000">
-  </div>
-  <div class="field">
-    <label><input type="checkbox" name="allowMonthlyInstallments"> Allow monthly installments</label>
-    <label for="monthlyAmount">Monthly installment amount (NGN)</label>
-    <input id="monthlyAmount" name="monthlyAmount" type="number" min="1" step="1" placeholder="e.g. 1000000">
-    <label for="monthlyMonths">Installment duration (months)</label>
-    <input id="monthlyMonths" name="monthlyMonths" type="number" min="1" max="120" step="1" placeholder="e.g. 12">
-    <small>When a deposit is enabled, the monthly plan starts with the deposit; subsequent monthly payments use the amount above. The final payment may be smaller.</small>
-  </div>
-  <div class="field">
-    <label><input type="checkbox" name="allowCustomInstallments" checked> Allow customer-selected custom payments</label>
-    <small>Customers can choose an amount for each payment, up to the remaining balance.</small>
-  </div>
-</fieldset>
+ 
 
+            
 
             <fieldset class="form-panel" style="margin:20px 0;padding:18px;border:1px solid var(--line);">
               <legend style="font-weight:700;color:var(--green);padding:0 8px;">Online payment settings (Paystack)</legend>

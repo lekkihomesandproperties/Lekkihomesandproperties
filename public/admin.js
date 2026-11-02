@@ -515,16 +515,28 @@ function getPropertyImages(property) {
   return [...new Set(images)];
 }
 
-// Load a property into the editor.
+// Load an existing property into the editor.
 async function editProperty(id) {
   try {
     const data = await api('/properties/' + id);
-
     const property = data.property;
     const form = $('#propertyForm');
 
+    if (!property) {
+      throw Error('Property could not be found.');
+    }
+
+    // IMPORTANT: Store the actual MongoDB ID in the hidden form field.
+    const propertyId = String(property._id || property.id || id || '').trim();
+
+    if (!propertyId) {
+      throw Error('Could not identify this property. Please try again.');
+    }
+
+    form.elements.id.value = propertyId;
+
+    // Populate the other property fields.
     for (const key of [
-      'id',
       'title',
       'location',
       'price',
@@ -540,45 +552,65 @@ async function editProperty(id) {
       }
     }
 
+    // Restore existing payment settings.
+    const payment = property.paymentSettings || {};
+
+    if (form.elements.paymentEnabled) {
+      form.elements.paymentEnabled.checked = Boolean(payment.enabled);
+    }
+
+    if (form.elements.allowFullPayment) {
+      form.elements.allowFullPayment.checked = payment.allowFullPayment !== false;
+    }
+
+    if (form.elements.allowDeposit) {
+      form.elements.allowDeposit.checked = payment.allowDeposit !== false;
+    }
+
+    if (form.elements.depositAmount) {
+      form.elements.depositAmount.value = payment.depositAmount ?? '';
+    }
+
+    if (form.elements.allowMonthlyInstallments) {
+      form.elements.allowMonthlyInstallments.checked = Boolean(payment.allowMonthlyInstallments);
+    }
+
+    if (form.elements.monthlyAmount) {
+      form.elements.monthlyAmount.value = payment.monthlyAmount ?? '';
+    }
+
+    if (form.elements.monthlyMonths) {
+      form.elements.monthlyMonths.value = payment.monthlyMonths ?? '';
+    }
+
+    if (form.elements.allowCustomInstallments) {
+      form.elements.allowCustomInstallments.checked = payment.allowCustomInstallments !== false;
+    }
+
+    // Restore existing property images.
     existingPropertyImages = getPropertyImages(property);
 
-    // Restore this property's payment configuration in the admin form.
-    const payment = property.paymentSettings || {};
-    if (form.elements.paymentEnabled) form.elements.paymentEnabled.checked = Boolean(payment.enabled);
-    if (form.elements.allowFullPayment) form.elements.allowFullPayment.checked = payment.allowFullPayment !== false;
-    if (form.elements.allowDeposit) form.elements.allowDeposit.checked = payment.allowDeposit !== false;
-    if (form.elements.depositAmount) form.elements.depositAmount.value = payment.depositAmount ?? '';
-    if (form.elements.allowMonthlyInstallments) form.elements.allowMonthlyInstallments.checked = Boolean(payment.allowMonthlyInstallments);
-    if (form.elements.monthlyAmount) form.elements.monthlyAmount.value = payment.monthlyAmount ?? '';
-    if (form.elements.monthlyMonths) form.elements.monthlyMonths.value = payment.monthlyMonths ?? '';
-    if (form.elements.allowCustomInstallments) form.elements.allowCustomInstallments.checked = payment.allowCustomInstallments !== false;
-
-    // Populate the image URL field with the current main image.
     if (form.elements.image) {
       form.elements.image.value = existingPropertyImages[0] || '';
     }
 
-    // Clear any files left over from a previous editing session.
     if ($('#imageFiles')) {
       $('#imageFiles').value = '';
     }
 
     renderImagePreviews();
 
-    msg(
-      `Editing property. ${existingPropertyImages.length} saved image(s) loaded. ` +
-      'New uploads will be added to the existing gallery.'
-    );
+    msg('Editing existing property. Changes will update this listing.');
 
     form.scrollIntoView({
       behavior: 'smooth',
       block: 'start'
     });
+
   } catch (error) {
-    alert(error.message);
+    alert(error.message || 'Could not load property.');
   }
 }
-
 // Delete a property.
 async function deleteProperty(id) {
   if (!confirm('Delete this property listing? This cannot be undone.')) {

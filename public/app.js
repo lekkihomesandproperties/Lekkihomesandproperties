@@ -105,12 +105,112 @@ function propertyCard(p) {
 }
 
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-async function renderProperties(target='propertyGrid',limit=99){const el=document.getElementById(target);if(!el)return;let props=await getProperties();const q=(document.getElementById('propertySearch')?.value||'').toLowerCase();const type=document.getElementById('typeFilter')?.value||'';const category=document.getElementById('categoryFilter')?.value||'';props=props.filter(p=>(!q||`${p.title} ${p.location}`.toLowerCase().includes(q))&&(!type||p.type===type)&&(!category||p.category===category)).slice(0,limit);el.innerHTML=props.length?props.map(propertyCard).join(''):'<div class="empty-state">No matching properties found. Try another search.</div>'}
 
-// async function openProperty(id)
 
-// {let p=(await getProperties()).find(x=>x._id===id)||sampleProperties.find(x=>x._id===id);if(!p)return;try{const r=await fetch(`${API}/properties/${id}/view`,{method:'POST'});if(r.ok)p= (await r.json()).property||p}catch{}const modal=document.getElementById('propertyModal');if(!modal){location.href=`property-listings.html?property=${encodeURIComponent(id)}`;return}document.getElementById('modalContent').innerHTML=`<img class="modal-image" src="${esc(p.image)}" alt="${esc(p.title)}"><div class="modal-content"><span class="eyebrow" style="color:#9c7714">${esc(p.type)}</span><h2 style="color:var(--green);margin:0">${esc(p.title)}</h2><p class="location">⌖ ${esc(p.location)}</p><div class="price">${money(p.price)}${p.type==='For Lease'?'<small class="muted"> / year</small>':''}</div><p>${esc(p.description||'Contact our team for full property details and inspection arrangements.')}</p><div class="property-meta"><span>Views: ${p.views||0}</span><span>Likes: ${p.likes||0}</span><span>${esc(p.area||'Details on request')}</span></div><div class="card-actions"><button class="btn btn-primary" onclick="startPayment('${p._id}')">Pay / Reserve</button><button class="btn btn-green" onclick="contactProperty('${p._id}')">Contact agent</button><button class="small-btn" onclick="shareProperty('${p._id}')">↗ Share</button></div><hr style="border:0;border-top:1px solid var(--line);margin:22px 0"><h3>Comments & questions</h3><div id="commentList" class="comment-list">Loading comments…</div><form onsubmit="submitComment(event,'${p._id}')"><div class="field"><label for="commentName">Your name</label><input id="commentName" required maxlength="80" placeholder="Full name"></div><div class="field"><label for="commentText">Comment</label><textarea id="commentText" required maxlength="1000" placeholder="Ask a question about this property"></textarea></div><button class="btn btn-green">Post comment</button></form></div>`;modal.classList.add('open');document.body.style.overflow='hidden';loadComments(id)}
 
+// Property listing pagination
+let currentPropertyPage = 1;
+const propertiesPerPage = 9;
+
+// Reset to page 1 when search or filters change
+function resetPropertyPage() {
+    currentPropertyPage = 1;
+    renderProperties();
+}
+
+// Navigate between pages
+function goToPropertyPage(page) {
+    currentPropertyPage = page;
+    renderProperties();
+
+    document.getElementById('propertyGrid')
+        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+async function renderProperties(target = 'propertyGrid', limit = 99) {
+    const el = document.getElementById(target);
+    if (!el) return;
+
+    let props = await getProperties();
+
+    const q = (document.getElementById('propertySearch')?.value || '').toLowerCase();
+    const type = document.getElementById('typeFilter')?.value || '';
+    const category = document.getElementById('categoryFilter')?.value || '';
+
+    // Apply existing search and filters
+    props = props.filter(p =>
+        (!q || `${p.title} ${p.location}`.toLowerCase().includes(q)) &&
+        (!type || p.type === type) &&
+        (!category || p.category === category)
+    );
+
+    // Keep other property grids working normally
+    if (target !== 'propertyGrid') {
+        props = props.slice(0, limit);
+        el.innerHTML = props.length
+            ? props.map(propertyCard).join('')
+            : '<div class="empty-state">No matching properties found.</div>';
+        return;
+    }
+
+    const totalPages = Math.ceil(props.length / propertiesPerPage);
+
+    // Keep page number valid after filtering
+    if (totalPages > 0 && currentPropertyPage > totalPages) {
+        currentPropertyPage = totalPages;
+    }
+
+    const start = (currentPropertyPage - 1) * propertiesPerPage;
+    const pageProperties = props.slice(start, start + propertiesPerPage);
+
+    el.innerHTML = pageProperties.length
+        ? pageProperties.map(propertyCard).join('')
+        : '<div class="empty-state">No matching properties found. Try another search.</div>';
+
+    renderPropertyPagination(totalPages);
+}
+
+// Generate numbered pagination buttons
+function renderPropertyPagination(totalPages) {
+    const pagination = document.getElementById('propertyPagination');
+    if (!pagination) return;
+
+    if (totalPages <= 1) {
+        pagination.innerHTML = '';
+        return;
+    }
+
+    let buttons = `
+        <button class="page-btn"
+            onclick="goToPropertyPage(${currentPropertyPage - 1})"
+            ${currentPropertyPage === 1 ? 'disabled' : ''}>
+            Previous
+        </button>
+    `;
+
+    for (let i = 1; i <= totalPages; i++) {
+        buttons += `
+            <button class="page-btn ${i === currentPropertyPage ? 'active' : ''}"
+                onclick="goToPropertyPage(${i})">
+                ${i}
+            </button>
+        `;
+    }
+
+    buttons += `
+        <button class="page-btn"
+            onclick="goToPropertyPage(${currentPropertyPage + 1})"
+            ${currentPropertyPage === totalPages ? 'disabled' : ''}>
+            Next
+        </button>
+    `;
+
+    pagination.innerHTML = buttons;
+}
+
+
+
+// async function renderProperties(target='propertyGrid',limit=99){const el=document.getElementById(target);if(!el)return;let props=await getProperties();const q=(document.getElementById('propertySearch')?.value||'').toLowerCase();const type=document.getElementById('typeFilter')?.value||'';const category=document.getElementById('categoryFilter')?.value||'';props=props.filter(p=>(!q||`${p.title} ${p.location}`.toLowerCase().includes(q))&&(!type||p.type===type)&&(!category||p.category===category)).slice(0,limit);el.innerHTML=props.length?props.map(propertyCard).join(''):'<div class="empty-state">No matching properties found. Try another search.</div>'}
 
 
 

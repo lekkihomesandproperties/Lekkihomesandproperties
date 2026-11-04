@@ -799,6 +799,11 @@
     transition: all 0.2s ease;
 }
 
+
+#propertyPaginationTop {
+    margin-bottom: 20px;
+}
+
 .page-btn:hover:not(:disabled),
 .page-btn.active {
     background: #06452e;

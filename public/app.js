@@ -172,11 +172,15 @@ async function renderProperties(target = 'propertyGrid', limit = 99) {
 
 // Generate numbered pagination buttons
 function renderPropertyPagination(totalPages) {
-    const pagination = document.getElementById('propertyPagination');
-    if (!pagination) return;
+    const paginationContainers = [
+        document.getElementById('propertyPaginationTop'),
+        document.getElementById('propertyPagination')
+    ];
 
     if (totalPages <= 1) {
-        pagination.innerHTML = '';
+        paginationContainers.forEach(container => {
+            if (container) container.innerHTML = '';
+        });
         return;
     }
 
@@ -205,7 +209,9 @@ function renderPropertyPagination(totalPages) {
         </button>
     `;
 
-    pagination.innerHTML = buttons;
+    paginationContainers.forEach(container => {
+        if (container) container.innerHTML = buttons;
+    });
 }
 
 

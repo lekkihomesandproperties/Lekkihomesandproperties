@@ -36,62 +36,160 @@ router.post('/initialize', async (req, res) => {
       const balance = Math.max(0, agreement.totalPrice - agreement.amountPaid);
       if (balance <= 0 || agreement.status === 'paid') return res.status(400).json({ message: 'This property has been fully paid for.' });
 
-      if (agreement.paymentMode === 'monthly') {
-        chargeAmount = Math.min(agreement.monthlyAmount, balance);
-      } else {
+    if (agreement.paymentMode === 'monthly') {
+  const monthlyAmount = Number(agreement.monthlyAmount);
+
+  if (!Number.isSafeInteger(monthlyAmount) || monthlyAmount <= 0) {
+    return res.status(400).json({
+      message: 'The monthly installment amount is invalid.'
+    });
+  }
+
+  chargeAmount = Math.min(monthlyAmount, balance);
+}
+      
+      else {
         chargeAmount = Number(req.body.amount);
         if (!Number.isSafeInteger(chargeAmount) || chargeAmount <= 0) {
           return res.status(400).json({ message: 'Enter the amount you want to pay.' });
         }
         if (chargeAmount > balance) return res.status(400).json({ message: 'Your payment cannot exceed the outstanding balance.' });
       }
-    } else {
-      const settings = property.paymentSettings || {};
-      if (!settings.enabled) return res.status(400).json({ message: 'Online payment is not enabled for this property. Please contact our team.' });
+    }  else {
+  // Load payment settings ONCE.
+  const settings = property.paymentSettings || {};
 
-      const totalPrice = Number(property.price);
-      if (!Number.isSafeInteger(totalPrice) || !Number.isSafeInteger(toKobo(totalPrice)) || toKobo(totalPrice) <= 0) {
-        return res.status(400).json({ message: 'This property does not have a valid online payment price.' });
-      }
+  if (!settings.enabled) {
+    return res.status(400).json({
+      message: 'Online payment is not enabled for this property. Please contact our team.'
+    });
+  }
 
-      if (paymentType === 'full' && settings.allowFullPayment) {
-        chargeAmount = totalPrice;
-      } else if (paymentType === 'deposit' && settings.allowDeposit) {
-        chargeAmount = Number(settings.depositAmount);
-      } else if (paymentType === 'monthly' && settings.allowMonthlyInstallments) {
-        chargeAmount = Number(settings.allowDeposit && settings.depositAmount > 0
-          ? settings.depositAmount
-          : settings.monthlyAmount);
-      } else if (paymentType === 'custom' && settings.allowCustomInstallments) {
-        chargeAmount = Number(req.body.amount);
-      } else {
-        return res.status(400).json({ message: 'The selected payment option is not available for this property.' });
-      }
+  // Apply charges to rental and lease properties only.
+  const isRental = ['For Rent', 'For Lease'].includes(
+    String(property.type)
+  );
 
-      if (!Number.isSafeInteger(chargeAmount) || chargeAmount <= 0 || chargeAmount > totalPrice) {
-        return res.status(400).json({ message: 'The payment amount is invalid.' });
-      }
-      if (paymentType === 'monthly' && (!Number(settings.monthlyAmount) || !Number(settings.monthlyMonths))) {
-        return res.status(400).json({ message: 'The monthly installment plan is not fully configured.' });
-      }
-      if (paymentType === 'monthly' && Number(settings.monthlyAmount) > totalPrice) {
-        return res.status(400).json({ message: 'The monthly installment amount cannot exceed the property price.' });
-      }
+  const basePrice = Number(property.price);
 
-      agreement = await PaymentAgreement.create({
-        property: property._id,
-        email,
-        publicToken: crypto.randomBytes(24).toString('hex'),
-        totalPrice,
-        amountPaid: 0,
-        paymentMode: paymentType,
-        depositAmount: Number(settings.depositAmount || 0),
-        monthlyAmount: Number(settings.monthlyAmount || 0),
-        monthlyMonths: Number(settings.monthlyMonths || 0),
-        status: 'pending'
-      });
-      isNewAgreement = true;
-    }
+  if (
+    !Number.isSafeInteger(basePrice) ||
+    basePrice <= 0 ||
+    !Number.isSafeInteger(toKobo(basePrice))
+  ) {
+    return res.status(400).json({
+      message: 'This property does not have a valid payment price.'
+    });
+  }
+
+  // Calculate four separate 10% charges.
+  const annualRent = isRental ? basePrice : 0;
+
+  const commission = isRental
+    ? Math.round(basePrice * 0.10)
+    : 0;
+
+  const agentCommission = commission;
+  const legalCommission = commission;
+  const cautionCommission = commission;
+  const cautionFeeCommission = commission;
+
+  // Calculate total payout.
+  const totalPrice =
+    basePrice +
+    agentCommission +
+    legalCommission +
+    cautionCommission +
+    cautionFeeCommission;
+
+  // Select payment option.
+  if (paymentType === 'full' && settings.allowFullPayment) {
+    chargeAmount = totalPrice;
+
+  } else if (paymentType === 'deposit' && settings.allowDeposit) {
+    chargeAmount = Number(settings.depositAmount);
+
+  } else if (
+    paymentType === 'monthly' &&
+    settings.allowMonthlyInstallments
+  ) {
+    chargeAmount = Number(
+      settings.allowDeposit && settings.depositAmount > 0
+        ? settings.depositAmount
+        : settings.monthlyAmount
+    );
+
+  } else if (
+    paymentType === 'custom' &&
+    settings.allowCustomInstallments
+  ) {
+    chargeAmount = Number(req.body.amount);
+
+  } else {
+    return res.status(400).json({
+      message: 'The selected payment option is not available for this property.'
+    });
+  }
+
+  // Validate payment amount.
+  if (
+    !Number.isSafeInteger(chargeAmount) ||
+    chargeAmount <= 0 ||
+    chargeAmount > totalPrice
+  ) {
+    return res.status(400).json({
+      message: 'The payment amount is invalid.'
+    });
+  }
+
+  // Validate monthly payment configuration.
+  if (
+    paymentType === 'monthly' &&
+    (!Number(settings.monthlyAmount) || !Number(settings.monthlyMonths))
+  ) {
+    return res.status(400).json({
+      message: 'The monthly installment plan is not fully configured.'
+    });
+  }
+
+  if (
+    paymentType === 'monthly' &&
+    Number(settings.monthlyAmount) > totalPrice
+  ) {
+    return res.status(400).json({
+      message: 'The monthly installment amount cannot exceed the total payout.'
+    });
+  }
+
+  // Create payment agreement.
+  agreement = await PaymentAgreement.create({
+    property: property._id,
+    email,
+    publicToken: crypto.randomBytes(24).toString('hex'),
+
+    annualRent,
+    agentCommission,
+    legalCommission,
+    cautionCommission,
+    cautionFeeCommission,
+
+    totalPrice,
+    amountPaid: 0,
+
+    paymentMode: paymentType,
+
+    depositAmount: Number(settings.depositAmount || 0),
+    monthlyAmount: Number(settings.monthlyAmount || 0),
+    monthlyMonths: Number(settings.monthlyMonths || 0),
+
+    status: 'pending'
+  });
+
+  isNewAgreement = true;
+}
+
+
+
 
     const amountKobo = toKobo(chargeAmount);
     if (!Number.isSafeInteger(amountKobo) || amountKobo <= 0) {
@@ -266,25 +364,37 @@ async function recordSuccessfulPayment(order, paystackData) {
   await claimed.save();
 }
 
+
 function agreementResult(order) {
   const agreement = order?.agreement;
+
   return {
     status: order.status,
     reference: order.reference,
     amount: order.amount,
     currency: 'NGN',
+
     agreementToken: agreement?.publicToken || '',
+
+    annualRent: agreement?.annualRent || 0,
+    agentCommission: agreement?.agentCommission || 0,
+    legalCommission: agreement?.legalCommission || 0,
+    cautionCommission: agreement?.cautionCommission || 0,
+    cautionFeeCommission: agreement?.cautionFeeCommission || 0,
+
     totalPrice: agreement?.totalPrice || 0,
     amountPaid: agreement?.amountPaid || 0,
-    balance: agreement ? Math.max(0, agreement.totalPrice - agreement.amountPaid) : 0,
+
+    balance: agreement
+      ? Math.max(0, agreement.totalPrice - agreement.amountPaid)
+      : 0,
+
     agreementStatus: agreement?.status || 'pending'
   };
 }
 
+
 module.exports = router;
 
 
-// const router=require('express').Router();const crypto=require('crypto');const Property=require('../models/Property');const Order=require('../models/Order');
-// router.post('/initialize',async(req,res)=>{try{const {propertyId,email}=req.body;if(!propertyId||!/^\S+@\S+\.\S+$/.test(String(email||'')))return res.status(400).json({message:'A valid property and email address are required.'});if(!process.env.PAYSTACK_SECRET_KEY||!process.env.PAYSTACK_SECRET_KEY.startsWith('sk_'))return res.status(503).json({message:'Online payments are not configured. Please contact our team.'});const property=await Property.findById(propertyId);if(!property)return res.status(404).json({message:'Property not found.'});const amountKobo=Math.round(property.price*100);if(!Number.isSafeInteger(amountKobo)||amountKobo<=0)return res.status(400).json({message:'Invalid payment amount.'});const reference='LHP-'+Date.now()+'-'+crypto.randomBytes(4).toString('hex');const order=await Order.create({property:property._id,email,amount:property.price,reference,status:'pending'});const resp=await fetch('https://api.paystack.co/transaction/initialize',{method:'POST',headers:{Authorization:`Bearer ${process.env.PAYSTACK_SECRET_KEY}`,'Content-Type':'application/json'},body:JSON.stringify({email,amount:amountKobo,currency:'NGN',reference,callback_url:`${process.env.CLIENT_URL||'http://localhost:5000'}/payment-result.html`,metadata:{orderReference:reference,propertyId:String(property._id),propertyTitle:property.title}})});const data=await resp.json();if(!resp.ok||!data.status){order.status='failed';await order.save();return res.status(502).json({message:data.message||'Payment provider could not initialize payment.'})}order.paymentUrl=data.data.authorization_url;await order.save();res.json({authorization_url:data.data.authorization_url,reference})}catch(e){res.status(500).json({message:'Unable to initialize payment.'})}});
-// router.get('/verify/:reference',async(req,res)=>{try{const order=await Order.findOne({reference:req.params.reference});if(!order)return res.status(404).json({message:'Payment reference not found.'});if(!process.env.PAYSTACK_SECRET_KEY)return res.status(503).json({message:'Payment verification is not configured.'});const r=await fetch(`https://api.paystack.co/transaction/verify/${encodeURIComponent(order.reference)}`,{headers:{Authorization:`Bearer ${process.env.PAYSTACK_SECRET_KEY}`}});const d=await r.json();if(r.ok&&d.status&&d.data.status==='success'&&d.data.currency==='NGN'&&Number(d.data.amount)===Math.round(order.amount*100)&&d.data.customer.email.toLowerCase()===order.email.toLowerCase()){order.status='paid';order.verifiedAt=new Date();await order.save();return res.json({status:'paid',reference:order.reference,amount:order.amount,currency:'NGN'})}order.status='failed';await order.save();res.status(400).json({status:'unverified',message:'Payment could not be verified.'})}catch{res.status(500).json({message:'Unable to verify payment.'})}});
-// router.post('/webhook',async(req,res)=>{const signature=req.headers['x-paystack-signature'];const secret=process.env.PAYSTACK_SECRET_KEY;if(!secret||!signature)return res.sendStatus(401);const hash=crypto.createHmac('sha512',secret).update(JSON.stringify(req.body)).digest('hex');if(hash!==signature)return res.sendStatus(401);try{const event=req.body;if(event.event==='charge.success'){const d=event.data;const order=await Order.findOne({reference:d.reference});if(order&&d.status==='success'&&d.currency==='NGN'&&Number(d.amount)===Math.round(order.amount*100)&&d.customer.email.toLowerCase()===order.email.toLowerCase()){order.status='paid';order.verifiedAt=new Date();await order.save()}}res.sendStatus(200)}catch{res.sendStatus(500)}});module.exports=router;
+

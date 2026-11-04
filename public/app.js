@@ -401,28 +401,38 @@ async function openProperty(id) {
                     : ''}
             </div>
 
-            <div class="card-actions">
-                <button
-                    class="btn btn-primary"
-                    onclick="startPayment('${p._id}')"
-                >
-                    Pay/Now
-                </button>
+          <div class="card-actions">
 
-                <button
-                    class="btn btn-green"
-                    onclick="contactProperty('${p._id}')"
-                >
-                    WhatsApp-Us
-                </button>
+    <a
+        href="tel:+2347084502673"
+        class="btn btn-green"
+        style="text-decoration:none;text-align:center;"
+    >
+        ☎ Call Us
+    </a>
 
-                <button
-                    class="small-btn"
-                    onclick="shareProperty('${p._id}')"
-                >
-                    ↗ Share
-                </button>
-            </div>
+    <button
+        class="btn btn-primary"
+        onclick="startPayment('${p._id}')"
+    >
+        Pay Now
+    </button>
+
+    <button
+        class="btn btn-green"
+        onclick="contactProperty('${p._id}')"
+    >
+        WhatsApp Us
+    </button>
+
+    <button
+        class="small-btn"
+        onclick="shareProperty('${p._id}')"
+    >
+        ↗ Share
+    </button>
+
+</div>
 
             <hr style="border:0;border-top:1px solid var(--line);margin:22px 0">
 

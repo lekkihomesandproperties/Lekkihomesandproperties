@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -6,66 +7,321 @@
   <meta name="theme-color" content="#06452e">
   <title>Payment Result | LEKKIHOMESANDPROPERTIES</title>
   <link rel="stylesheet" href="styles.css">
+
   <style>
-    .payment-result{max-width:680px;margin:60px auto;padding:28px;border:1px solid var(--line,#ddd);border-radius:14px;background:#fff;text-align:center}
-    .payment-result h1{color:var(--green,#06452e)}.payment-result .amount{font-size:1.5rem;font-weight:800;color:var(--green,#06452e)}
-    .payment-token{word-break:break-all;padding:12px;background:#f3f6f3;border-radius:8px;margin:14px 0}
+    .payment-result {
+      max-width:680px;
+      margin:60px auto;
+      padding:28px;
+      border:1px solid var(--line,#ddd);
+      border-radius:14px;
+      background:#fff;
+      text-align:center;
+    }
+
+    .payment-result h1 {
+      color:var(--green,#06452e);
+    }
+
+    .payment-result .amount {
+      font-size:1.5rem;
+      font-weight:800;
+      color:var(--green,#06452e);
+    }
+
+    .payment-token {
+      word-break:break-all;
+      padding:12px;
+      background:#f3f6f3;
+      border-radius:8px;
+      margin:14px 0;
+    }
+
+    .payment-breakdown {
+      text-align:left;
+      background:#f7faf7;
+      border:1px solid #dce5de;
+      border-radius:12px;
+      padding:18px;
+      margin:22px 0;
+    }
+
+    .payment-breakdown h3 {
+      color:#06452e;
+      margin-top:0;
+    }
+
+    .payment-row {
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      padding:9px 0;
+      border-bottom:1px solid #e1e8e2;
+    }
+
+    .payment-total {
+      border-top:2px solid #06452e;
+      border-bottom:0;
+      margin-top:8px;
+      padding-top:15px;
+      font-size:1.1rem;
+      font-weight:800;
+      color:#06452e;
+    }
+
+    .payment-summary {
+      text-align:left;
+      margin:20px 0;
+      padding:15px;
+      background:#f3f6f3;
+      border-radius:10px;
+    }
+
+    .payment-summary p {
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+    }
+
+    @media(max-width:480px) {
+      .payment-result {
+        margin:20px auto;
+        padding:18px;
+      }
+
+      .payment-row,
+      .payment-summary p {
+        font-size:.9rem;
+      }
+    }
   </style>
 </head>
+
 <body>
   <main class="container">
     <section class="payment-result">
+
       <h1 id="resultTitle">Verifying your payment…</h1>
-      <p id="resultMessage">Please wait while we confirm your transaction with Paystack.</p>
+
+      <p id="resultMessage">
+        Please wait while we confirm your transaction with Paystack.
+      </p>
+
       <div id="resultDetails"></div>
-      <p><a class="btn btn-primary" href="property-listings.html">Return to properties</a></p>
+
+      <p>
+        <a class="btn btn-primary" href="property-listings.html">
+          Return to properties
+        </a>
+      </p>
+
     </section>
   </main>
+
   <script>
     (async function () {
+
       const API = 'https://lekkihomesandproperties.com/api';
+
       const params = new URLSearchParams(location.search);
-      const reference = params.get('reference') || params.get('trxref');
+
+      const reference =
+        params.get('reference') ||
+        params.get('trxref');
+
       const title = document.getElementById('resultTitle');
       const message = document.getElementById('resultMessage');
       const details = document.getElementById('resultDetails');
-      const money = n => '₦' + Number(n || 0).toLocaleString('en-NG');
+
+      const money = n =>
+        '₦' + Number(n || 0).toLocaleString('en-NG');
+
+      const escapeHtml = value =>
+        String(value ?? '').replace(/[&<>"']/g, c => ({
+          '&':'&amp;',
+          '<':'&lt;',
+          '>':'&gt;',
+          '"':'&quot;',
+          "'":'&#39;'
+        }[c]));
+
       if (!reference) {
         title.textContent = 'Payment reference not found';
-        message.textContent = 'We could not find a transaction reference. If you were charged, please contact our team with your Paystack receipt.';
+
+        message.textContent =
+          'We could not find a transaction reference. If you were charged, please contact our team with your Paystack receipt.';
+
         return;
       }
+
       try {
-        const response = await fetch(`${API}/payments/verify/${encodeURIComponent(reference)}`);
+
+        const response = await fetch(
+          `${API}/payments/verify/${encodeURIComponent(reference)}`
+        );
+
         const data = await response.json().catch(() => ({}));
-        if (!response.ok || data.status !== 'paid') throw new Error(data.message || 'Payment is not yet confirmed.');
-        title.textContent = data.balance > 0 ? 'Payment received successfully' : 'Property payment completed';
-        message.textContent = data.balance > 0
-          ? 'Your payment has been verified. Keep your payment plan reference safe and use it for your next installment.'
-          : 'Your full property price has been paid. Thank you for choosing LEKKIHOMESANDPROPERTIES.';
-        const token = data.agreementToken || params.get('agreement') || '';
-        details.innerHTML = `
-          <p>Amount paid in this transaction: <strong>${money(data.amount)}</strong></p>
-          <p>Total paid so far: <strong>${money(data.amountPaid)}</strong></p>
-          <p>Outstanding balance: <span class="amount">${money(data.balance)}</span></p>
-          ${token && data.balance > 0 ? `<p>Your payment plan reference:</p><div class="payment-token" id="planToken">${token}</div><button class="btn btn-green" id="copyPlanToken" type="button">Copy payment plan reference</button><p class="muted">To make another payment, open the property details, select Pay Now, enter the same email and paste this reference.</p>` : ''}
-        `;
-        if (token) {
-          const keyEmail = params.get('email');
-          if (keyEmail) localStorage.setItem(`lhp_payment_plan_${params.get('propertyId') || ''}_${keyEmail}`, token);
-          document.getElementById('copyPlanToken')?.addEventListener('click', async () => {
-            try { await navigator.clipboard.writeText(token); document.getElementById('copyPlanToken').textContent = 'Copied'; }
-            catch { alert('Please copy the payment plan reference manually.'); }
-          });
+
+        if (!response.ok || data.status !== 'paid') {
+          throw new Error(
+            data.message || 'Payment is not yet confirmed.'
+          );
         }
+
+        title.textContent =
+          data.balance > 0
+            ? 'Payment received successfully'
+            : 'Property payment completed';
+
+        message.textContent =
+          data.balance > 0
+            ? 'Your payment has been verified successfully. Keep your payment plan reference safe for future installments.'
+            : 'Your full property payment has been completed. Thank you for choosing LEKKIHOMESANDPROPERTIES.';
+
+        const token =
+          data.agreementToken ||
+          params.get('agreement') ||
+          '';
+
+        // Display the rental payment breakdown.
+        const hasRentalBreakdown =
+          Number(data.annualRent) > 0;
+
+        const breakdownHtml = hasRentalBreakdown
+          ? `
+            <div class="payment-breakdown">
+
+              <h3>Rental Payment Breakdown</h3>
+
+              <div class="payment-row">
+                <span>Annual Rent (100%)</span>
+                <strong>${money(data.annualRent)}</strong>
+              </div>
+
+              <div class="payment-row">
+                <span>Agent Commission (10%)</span>
+                <strong>${money(data.agentCommission)}</strong>
+              </div>
+
+              <div class="payment-row">
+                <span>Legal Commission (10%)</span>
+                <strong>${money(data.legalCommission)}</strong>
+              </div>
+
+              <div class="payment-row">
+                <span>Caution Commission (10%)</span>
+                <strong>${money(data.cautionCommission)}</strong>
+              </div>
+
+              <div class="payment-row">
+                <span>Caution Fee Commission (10%)</span>
+                <strong>${money(data.cautionFeeCommission)}</strong>
+              </div>
+
+              <div class="payment-row payment-total">
+                <span>TOTAL PAYOUT</span>
+                <strong>${money(data.totalPrice)}</strong>
+              </div>
+
+            </div>
+          `
+          : '';
+
+        details.innerHTML = `
+          ${breakdownHtml}
+
+          <div class="payment-summary">
+
+            <h3>Payment Summary</h3>
+
+            <p>
+              <span>Amount paid in this transaction:</span>
+              <strong>${money(data.amount)}</strong>
+            </p>
+
+            <p>
+              <span>Total paid so far:</span>
+              <strong>${money(data.amountPaid)}</strong>
+            </p>
+
+            <p>
+              <span>Outstanding balance:</span>
+              <strong class="amount">${money(data.balance)}</strong>
+            </p>
+
+          </div>
+
+          ${
+            token && data.balance > 0
+              ? `
+                <p>Your payment plan reference:</p>
+
+                <div class="payment-token" id="planToken">
+                  ${escapeHtml(token)}
+                </div>
+
+                <button class="btn btn-green"
+                  id="copyPlanToken"
+                  type="button">
+                  Copy payment plan reference
+                </button>
+
+                <p class="muted">
+                  To make another payment, open the property details,
+                  select Pay Now, enter the same email and paste
+                  this reference.
+                </p>
+              `
+              : ''
+          }
+        `;
+
+        if (token) {
+
+          const keyEmail = params.get('email');
+
+          if (keyEmail) {
+            localStorage.setItem(
+              `lhp_payment_plan_${params.get('propertyId') || ''}_${keyEmail.toLowerCase()}`,
+              token
+            );
+          }
+
+          document.getElementById('copyPlanToken')
+            ?.addEventListener('click', async () => {
+
+              try {
+
+                await navigator.clipboard.writeText(token);
+
+                document.getElementById('copyPlanToken').textContent =
+                  'Copied';
+
+              } catch {
+
+                alert(
+                  'Please copy the payment plan reference manually.'
+                );
+
+              }
+            });
+        }
+
       } catch (error) {
+
         title.textContent = 'Payment not confirmed yet';
-        message.textContent = error.message + ' If Paystack has charged you, do not pay again immediately. Contact our team and provide your transaction reference: ' + reference;
-        details.textContent = 'Transaction reference: ' + reference;
+
+        message.textContent =
+          error.message +
+          ' If Paystack has charged you, do not pay again immediately. Contact our team and provide your transaction reference: ' +
+          reference;
+
+        details.textContent =
+          'Transaction reference: ' + reference;
+
       }
+
     })();
   </script>
 </body>
 </html>
-
-
